@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard de Atendimentos</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root {
+  --bg: #f4f4f0;
+  --surface: #ffffff;
+  --surface2: #f0eeea;
+  --surface3: #e8e6e1;
+  --border: rgba(0,0,0,0.08);
+  --border2: rgba(0,0,0,0.13);
+  --text: #18181a;
+  --text2: #52525b;
+  --text3: #a1a1aa;
+  --accent: #4f46e5;
+  --accent-light: #ede9fe;
+  --accent-text: #3730a3;
+  --green: #16a34a; --green-bg: #dcfce7; --green-text: #14532d;
+  --amber: #d97706; --amber-bg: #fef3c7; --amber-text: #78350f;
+  --red: #dc2626; --red-bg: #fee2e2; --red-text: #7f1d1d;
+  --blue: #2563eb; --blue-bg: #dbeafe; --blue-text: #1e3a8a;
+  --gray-bg: #f1f5f9; --gray-text: #475569;
+  --shadow: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+  --radius: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --transition: 0.2s ease;
+}
+[data-theme="dark"] {
+  --bg: #0f0f11;
+  --surface: #18181b;
+  --surface2: #222226;
+  --surface3: #2c2c31;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --text: #fafafa;
+  --text2: #a1a1aa;
+  --text3: #52525b;
+  --accent: #818cf8;
+  --accent-light: #1e1b4b;
+  --accent-text: #c7d2fe;
+  --green: #4ade80; --green-bg: #052e16; --green-text: #86efac;
+  --amber: #fbbf24; --amber-bg: #1c1003; --amber-text: #fde68a;
+  --red: #f87171; --red-bg: #1f0505; --red-text: #fca5a5;
+  --blue: #60a5fa; --blue-bg: #0c1a3a; --blue-text: #93c5fd;
+  --gray-bg: #1e2433; --gray-text: #94a3b8;
+  --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.4), 0 2px 4px rgba(0,0,0,0.3);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  transition: background var(--transition), color var(--transition);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
+
+/* TOPBAR */
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 1.5rem;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(12px);
+  transition: background var(--transition);
+}
+.topbar-brand { display: flex; align-items: center; gap: 10px; }
+.topbar-brand .logo {
+  width: 34px; height: 34px;
+  background: var(--accent);
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.topbar-brand h1 { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+.topbar-brand span { font-size: 12px; color: var(--text3); }
+.topbar-right { display: flex; align-items: center; gap: 8px; }
+
+/* BUTTONS */
+.btn {
+  font-size: 13px; font-weight: 500;
+  padding: 7px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border2);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+.btn:hover { background: var(--surface2); border-color: var(--border2); }
+.btn:active { transform: scale(0.97); }
+.btn-accent {
+  background: var(--accent); color: #fff; border-color: transparent;
+}
+.btn-accent:hover { opacity: 0.88; background: var(--accent); }
+.btn-ghost { border-color: transparent; background: transparent; }
+.btn-ghost:hover { background: var(--surface2); }
+.btn-icon {
+  width: 34px; height: 34px; padding: 0;
+  justify-content: center; font-size: 16px;
+}
+
+/* CONTAINER */
+.container { max-width: 1280px; margin: 0 auto; padding: 1.5rem; }
+
+/* CONNECT SCREEN */
+.connect-wrap {
+  min-height: calc(100vh - 58px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 2rem 1rem;
+}
+.connect-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 2.5rem 2rem;
+  width: 100%; max-width: 480px;
+  box-shadow: var(--shadow-md);
+  transition: background var(--transition);
+}
+.connect-icon {
+  width: 56px; height: 56px;
+  background: var(--accent-light);
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px; color: var(--accent);
+  margin: 0 auto 1.2rem;
+}
+.connect-card h2 { font-size: 20px; font-weight: 700; text-align: center; margin-bottom: 0.4rem; letter-spacing: -0.02em; }
+.connect-card > p { font-size: 13px; color: var(--text2); text-align: center; margin-bottom: 1.8rem; line-height: 1.6; }
+.field { margin-bottom: 1rem; }
+.field label { display: block; font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.05em; }
+.field input {
+  width: 100%; font-size: 13px; padding: 9px 12px;
+  border: 1px solid var(--border2); border-radius: var(--radius);
+  background: var(--surface2); color: var(--text);
+  outline: none; transition: all var(--transition);
+}
+.field input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent); background: var(--surface); }
+.field input::placeholder { color: var(--text3); }
+.hint {
+  font-size: 12px; color: var(--text3);
+  background: var(--surface2);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  margin: 0.8rem 0 1.2rem;
+  line-height: 1.6;
+  display: flex; gap: 8px; align-items: flex-start;
+}
+.hint i { flex-shrink: 0; margin-top: 1px; color: var(--accent); }
+.hint a { color: var(--accent); }
+.connect-error {
+  font-size: 13px; color: var(--red);
+  background: var(--red-bg); color: var(--red-text);
+  border-radius: var(--radius); padding: 10px 14px;
+  margin-bottom: 1rem; display: none;
+  border: 1px solid color-mix(in srgb, var(--red) 20%, transparent);
+}
+.divider { display: flex; align-items: center; gap: 10px; margin: 1.2rem 0; color: var(--text3); font-size: 12px; }
+.divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* SECTION HEADER */
+.section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 10px;
+  margin-bottom: 1.2rem;
+}
+.section-title { font-size: 12px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.07em; }
+
+/* FILTERS BAR */
+.filters-bar {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 0.75rem 1rem;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow);
+  transition: background var(--transition);
+}
+.filters-bar .filter-label { font-size: 12px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; margin-right: 4px; }
+.filter-chip-group { display: flex; gap: 6px; flex-wrap: wrap; }
+.filter-chip {
+  font-size: 12px; font-weight: 500;
+  padding: 5px 12px;
+  border-radius: 99px;
+  border: 1px solid var(--border2);
+  background: transparent; color: var(--text2);
+  cursor: pointer; transition: all var(--transition);
+}
+.filter-chip:hover { border-color: var(--accent); color: var(--accent); }
+.filter-chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.filter-sep { width: 1px; height: 22px; background: var(--border); margin: 0 4px; }
+.filter-select {
+  font-size: 13px; padding: 6px 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border2);
+  background: var(--surface2); color: var(--text);
+  outline: none; cursor: pointer;
+  transition: all var(--transition);
+}
+.filter-select:focus { border-color: var(--accent); }
+
+/* METRICS GRID */
+.metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
+.metric-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.1rem 1.25rem;
+  box-shadow: var(--shadow);
+  transition: all var(--transition);
+  position: relative; overflow: hidden;
+}
+.metric-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: var(--mc-color, var(--accent));
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+.metric-icon {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; margin-bottom: 0.75rem;
+  background: var(--mc-bg, var(--accent-light));
+  color: var(--mc-color, var(--accent));
+}
+.metric-value { font-size: 28px; font-weight: 700; line-height: 1; letter-spacing: -0.03em; margin-bottom: 4px; }
+.metric-label { font-size: 12px; color: var(--text2); font-weight: 500; }
+.metric-sub { font-size: 11px; color: var(--text3); margin-top: 3px; }
+
+/* CHARTS */
+.charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.chart-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.1rem 1.25rem;
+  box-shadow: var(--shadow);
+  transition: background var(--transition);
+}
+.chart-title { font-size: 12px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 0.75rem; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text2); }
+.legend-dot { width: 8px; height: 8px; border-radius: 3px; flex-shrink: 0; }
+
+/* TABLE CARD */
+.table-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  transition: background var(--transition);
+}
+.table-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 8px;
+}
+.table-header-title { font-size: 12px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.07em; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th {
+  text-align: left; font-weight: 600; font-size: 11px; color: var(--text3);
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  background: var(--surface2);
+  position: sticky; top: 0;
+}
+td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text); }
+tr:last-child td { border-bottom: none; }
+tbody tr { transition: background var(--transition); }
+tbody tr:hover td { background: var(--surface2); }
+
+/* BADGES */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 600;
+  padding: 3px 9px; border-radius: 99px;
+}
+.badge-green { background: var(--green-bg); color: var(--green-text); }
+.badge-amber { background: var(--amber-bg); color: var(--amber-text); }
+.badge-red { background: var(--red-bg); color: var(--red-text); }
+.badge-blue { background: var(--blue-bg); color: var(--blue-text); }
+.badge-gray { background: var(--gray-bg); color: var(--gray-text); }
+.badge-accent { background: var(--accent-light); color: var(--accent-text); }
+
+/* THEME TOGGLE */
+.theme-toggle {
+  width: 52px; height: 28px;
+  background: var(--surface3);
+  border-radius: 99px;
+  border: 1px solid var(--border2);
+  cursor: pointer;
+  position: relative;
+  transition: all var(--transition);
+  display: flex; align-items: center; padding: 0 4px;
+}
+.theme-toggle::after {
+  content: '';
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  transition: transform var(--transition);
+  transform: translateX(0);
+}
+[data-theme="dark"] .theme-toggle::after { transform: translateX(24px); }
+[data-theme="dark"] .theme-toggle { background: var(--accent); border-color: transparent; }
+.theme-icon { position: absolute; font-size: 11px; color: var(--text3); }
+.theme-icon-sun { left: 6px; }
+.theme-icon-moon { right: 5px; }
+
+/* STATUS DOT */
+.status-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+.dot-green { background: var(--green); }
+.dot-amber { background: var(--amber); }
+.dot-blue { background: var(--blue); }
+.dot-red { background: var(--red); }
+
+/* EMPTY STATE */
+.empty { text-align: center; padding: 3rem 1rem; color: var(--text3); }
+.empty i { font-size: 32px; margin-bottom: 0.5rem; }
+.empty p { font-size: 13px; }
+
+/* AVATAR */
+.avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: #fff;
+  flex-shrink: 0;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .charts-row { grid-template-columns: 1fr; }
+  .container { padding: 1rem; }
+  .topbar-brand span { display: none; }
+}
+@media (max-width: 480px) {
+  .metrics { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-brand">
+    <div class="logo"><i class="ti ti-chart-dots-3" aria-hidden="true"></i></div>
+    <div>
+      <h1>Atendimentos</h1>
+      <span id="topbar-sub">Painel de acompanhamento</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div id="topbar-actions"></div>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema" aria-label="Alternar entre modo claro e escuro">
+      <i class="ti ti-sun theme-icon theme-icon-sun" aria-hidden="true"></i>
+      <i class="ti ti-moon theme-icon theme-icon-moon" aria-hidden="true"></i>
+    </button>
+  </div>
+</div>
+
+<!-- CONNECT SCREEN -->
+<div id="connect-screen" class="connect-wrap">
+  <div class="connect-card">
+    <div class="connect-icon"><i class="ti ti-table" aria-hidden="true"></i></div>
+    <h2>Conectar planilha</h2>
+    <p>Preencha os dados abaixo para carregar os atendimentos direto do Google Sheets.</p>
+
+    <div class="field">
+      <label>ID da planilha</label>
+      <input id="sheet-id" type="text" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74Og..." />
+    </div>
+    <div class="field">
+      <label>Nome da aba</label>
+      <input id="sheet-tab" type="text" placeholder="Atendimentos" />
+    </div>
+    <div class="field">
+      <label>Chave de API do Google</label>
+      <input id="api-key" type="password" placeholder="AIza..." />
+    </div>
+
+    <div class="hint">
+      <i class="ti ti-info-circle" aria-hidden="true"></i>
+      <span>Crie uma chave gratuita em <a href="https://console.cloud.google.com/apis/credentials" target="_blank">Google Cloud Console</a> ativando a <strong>Sheets API</strong>. A planilha deve estar compartilhada como <em>"qualquer pessoa com o link pode ver"</em>.</span>
+    </div>
+
+    <div class="connect-error" id="connect-error"></div>
+
+    <button class="btn btn-accent" style="width:100%; justify-content:center; font-size:14px; padding: 10px;" onclick="loadSheet()">
+      <i class="ti ti-plug" aria-hidden="true"></i> Conectar e carregar
+    </button>
+    <div class="divider">ou</div>
+    <button class="btn" style="width:100%; justify-content:center;" onclick="loadDemo()">
+      <i class="ti ti-eye" aria-hidden="true"></i> Ver demo com dados fictícios
+    </button>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard" style="display:none;">
+<div class="container">
+
+  <!-- FILTERS -->
+  <div class="filters-bar">
+    <span class="filter-label"><i class="ti ti-filter" style="vertical-align:-2px"></i></span>
+    <div class="filter-chip-group" id="period-chips">
+      <button class="filter-chip active" data-period="todos" onclick="setPeriod(this)">Todos</button>
+      <button class="filter-chip" data-period="hoje" onclick="setPeriod(this)">Hoje</button>
+      <button class="filter-chip" data-period="semana" onclick="setPeriod(this)">Esta semana</button>
+      <button class="filter-chip" data-period="mes" onclick="setPeriod(this)">Este mês</button>
+    </div>
+    <div class="filter-sep"></div>
+    <select class="filter-select" id="filter-colaboradora" onchange="applyFilters()">
+      <option value="">Todas as colaboradoras</option>
+    </select>
+    <select class="filter-select" id="filter-transportadora" onchange="applyFilters()">
+      <option value="">Todas as transportadoras</option>
+    </select>
+    <select class="filter-select" id="filter-status" onchange="applyFilters()">
+      <option value="">Todos os status</option>
+    </select>
+  </div>
+
+  <!-- METRICS -->
+  <div class="metrics" id="metrics"></div>
+
+  <!-- CHARTS -->
+  <div class="charts-row">
+    <div class="chart-card">
+      <div class="chart-title">Atendimentos por colaboradora</div>
+      <div class="legend" id="legend-colab"></div>
+      <div style="position:relative; height:210px;"><canvas id="chart-colab" role="img" aria-label="Atendimentos por colaboradora"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Por transportadora</div>
+      <div class="legend" id="legend-transp"></div>
+      <div style="position:relative; height:210px;"><canvas id="chart-transp" role="img" aria-label="Atendimentos por transportadora"></canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-card" style="margin-bottom:14px;">
+    <div class="chart-title">Evolução diária</div>
+    <div style="position:relative; height:160px;"><canvas id="chart-timeline" role="img" aria-label="Evolução diária de atendimentos"></canvas></div>
+  </div>
+
+  <div class="charts-row">
+    <div class="chart-card">
+      <div class="chart-title">Por ocorrência</div>
+      <div style="position:relative; height:200px;"><canvas id="chart-ocorrencia" role="img" aria-label="Atendimentos por tipo de ocorrência"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Por canal de atendimento</div>
+      <div class="legend" id="legend-canal"></div>
+      <div style="position:relative; height:200px;"><canvas id="chart-canal" role="img" aria-label="Atendimentos por canal"></canvas></div>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-card">
+    <div class="table-header">
+      <span class="table-header-title">Registros <span id="table-count" style="font-weight:400; text-transform:none; letter-spacing:0; color: var(--text3);"></span></span>
+      <div style="display:flex; gap:6px;">
+        <input id="search-input" class="filter-select" type="text" placeholder="Buscar..." oninput="applyFilters()" style="width:180px;" />
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Colaboradora</th>
+          <th>Data</th>
+          <th>Canal</th>
+          <th>Solicitante</th>
+          <th>Pedido</th>
+          <th>IDK</th>
+          <th>Transportadora</th>
+          <th>Ocorrência</th>
+          <th>Filial</th>
+          <th>CD</th>
+          <th>Resolução</th>
+          <th>Status</th>
+        </tr></thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let rawData = [], filteredData = [];
+let charts = {};
+let currentPeriod = 'todos';
+
+const PALETTE = [
+  '#6366f1','#10b981','#f59e0b','#ef4444','#3b82f6',
+  '#8b5cf6','#06b6d4','#84cc16','#f97316','#ec4899'
+];
+
+const AVATAR_COLORS = [
+  '#6366f1','#10b981','#f59e0b','#3b82f6','#8b5cf6',
+  '#06b6d4','#ef4444','#84cc16','#f97316','#ec4899'
+];
+
+// ─── THEME ───────────────────────────────────────────────────────────────────
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  localStorage.setItem('theme', isDark ? 'light' : 'dark');
+  if (Object.keys(charts).length) setTimeout(renderCharts, 50);
+}
+
+(function initTheme() {
+  const saved = localStorage.getItem('theme');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const theme = saved || (prefersDark ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+
+// ─── CONNECT ──────────────────────────────────────────────────────────────────
+function loadDemo() {
+  const names = ['Ana Lima','Beatriz Santos','Carla Souza','Diana Melo','Elaine Costa','Fernanda Dias'];
+  const transportadoras = ['Correios','JadLog','Total Express','Sequoia','Braspress','Jadlog'];
+  const canais = ['WhatsApp','E-mail','Telefone','Portal','Chat'];
+  const ocorrencias = ['Atraso na entrega','Extravio','Avaria','Endereço errado','Entrega não realizada','Devolução'];
+  const statuses = ['Resolvido','Em andamento','Pendente','Cancelado'];
+  const filiais = ['SP','RJ','MG','BA','PR','RS'];
+  const cds = ['CD Sul','CD Norte','CD Leste','CD Oeste'];
+  const resolucoes = ['Reenvio','Reembolso','Esclarecimento','Em análise','Redirecionamento'];
+  const data = [];
+  const hoje = new Date();
+  for (let i = 0; i < 200; i++) {
+    const d = new Date(hoje);
+    d.setDate(d.getDate() - Math.floor(Math.random() * 45));
+    data.push({
+      colaboradora: names[Math.floor(Math.random() * names.length)],
+      data: d.toISOString().split('T')[0],
+      canal: canais[Math.floor(Math.random() * canais.length)],
+      solicitante: 'Cliente ' + (1000 + i),
+      pedido: 'PED-' + (Math.floor(Math.random() * 90000) + 10000),
+      idk: 'IDK-' + (Math.floor(Math.random() * 9000) + 1000),
+      transportadora: transportadoras[Math.floor(Math.random() * transportadoras.length)],
+      ocorrencia: ocorrencias[Math.floor(Math.random() * ocorrencias.length)],
+      filial: filiais[Math.floor(Math.random() * filiais.length)],
+      cd: cds[Math.floor(Math.random() * cds.length)],
+      resolucao: resolucoes[Math.floor(Math.random() * resolucoes.length)],
+      observacao: '',
+      status: statuses[Math.floor(Math.random() * statuses.length)]
+    });
+  }
+  rawData = data;
+  setTopbarActions('Demo');
+  showDashboard();
+}
+
+async function loadSheet() {
+  const id = document.getElementById('sheet-id').value.trim();
+  const tab = document.getElementById('sheet-tab').value.trim() || 'Sheet1';
+  const key = document.getElementById('api-key').value.trim();
+  const errEl = document.getElementById('connect-error');
+  errEl.style.display = 'none';
+  if (!id || !key) { showConnectError('Preencha o ID da planilha e a chave de API.'); return; }
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(id)}/values/${encodeURIComponent(tab)}?key=${encodeURIComponent(key)}`;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) {
+      const j = await res.json().catch(()=>({}));
+      throw new Error((j.error && j.error.message) || 'Erro ' + res.status);
+    }
+    const json = await res.json();
+    const rows = json.values || [];
+    if (rows.length < 2) throw new Error('Planilha sem dados. Verifique o nome da aba.');
+    rawData = rows.slice(1).map(r => ({
+      colaboradora: r[0]||'', data: r[1]||'', canal: r[2]||'',
+      solicitante: r[3]||'', pedido: r[4]||'', idk: r[5]||'',
+      transportadora: r[6]||'', ocorrencia: r[7]||'', filial: r[8]||'',
+      cd: r[9]||'', resolucao: r[10]||'', observacao: r[11]||'', status: r[12]||''
+    }));
+    setTopbarActions('Atualizado às ' + new Date().toLocaleTimeString('pt-BR'));
+    showDashboard();
+  } catch(e) { showConnectError(e.message); }
+}
+
+function showConnectError(msg) {
+  const el = document.getElementById('connect-error');
+  el.innerHTML = '<i class="ti ti-alert-circle" style="vertical-align:-2px; margin-right:5px;"></i>' + msg;
+  el.style.display = 'block';
+}
+
+function setTopbarActions(info) {
+  document.getElementById('topbar-sub').textContent = info;
+  document.getElementById('topbar-actions').innerHTML = `
+    <div style="display:flex; gap:6px; align-items:center; margin-right:6px;">
+      <button class="btn btn-ghost btn-icon" onclick="refreshData()" title="Atualizar dados"><i class="ti ti-refresh" aria-hidden="true"></i></button>
+      <button class="btn btn-ghost btn-icon" onclick="disconnect()" title="Desconectar"><i class="ti ti-plug-x" aria-hidden="true"></i></button>
+    </div>
+  `;
+}
+
+async function refreshData() {
+  const id = document.getElementById('sheet-id').value.trim();
+  if (!id) { loadDemo(); return; }
+  await loadSheet();
+}
+
+function disconnect() {
+  Object.values(charts).forEach(c => { try { c.destroy(); } catch(e){} });
+  charts = {};
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('connect-screen').style.display = 'flex';
+  document.getElementById('topbar-actions').innerHTML = '';
+  document.getElementById('topbar-sub').textContent = 'Painel de acompanhamento';
+}
+
+function showDashboard() {
+  document.getElementById('connect-screen').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+  populateFilters();
+  applyFilters();
+}
+
+// ─── FILTERS ──────────────────────────────────────────────────────────────────
+function populateFilters() {
+  const fill = (id, vals) => {
+    const el = document.getElementById(id);
+    const first = el.options[0].outerHTML;
+    el.innerHTML = first + vals.map(v => `<option value="${v}">${v}</option>`).join('');
+  };
+  fill('filter-colaboradora', unique(rawData, 'colaboradora'));
+  fill('filter-transportadora', unique(rawData, 'transportadora'));
+  fill('filter-status', unique(rawData, 'status'));
+}
+
+function unique(data, key) {
+  return [...new Set(data.map(r => r[key]).filter(Boolean))].sort();
+}
+
+function setPeriod(el) {
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  currentPeriod = el.dataset.period;
+  applyFilters();
+}
+
+function applyFilters() {
+  const colab = document.getElementById('filter-colaboradora').value;
+  const transp = document.getElementById('filter-transportadora').value;
+  const status = document.getElementById('filter-status').value;
+  const search = (document.getElementById('search-input').value || '').toLowerCase();
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const semana = new Date(hoje); semana.setDate(semana.getDate() - semana.getDay());
+  const mes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+
+  filteredData = rawData.filter(r => {
+    if (colab && r.colaboradora !== colab) return false;
+    if (transp && r.transportadora !== transp) return false;
+    if (status && r.status !== status) return false;
+    if (currentPeriod !== 'todos' && r.data) {
+      const d = new Date(r.data + 'T00:00:00');
+      if (currentPeriod === 'hoje' && d < hoje) return false;
+      if (currentPeriod === 'semana' && d < semana) return false;
+      if (currentPeriod === 'mes' && d < mes) return false;
+    }
+    if (search) {
+      const haystack = Object.values(r).join(' ').toLowerCase();
+      if (!haystack.includes(search)) return false;
+    }
+    return true;
+  });
+  renderMetrics();
+  renderCharts();
+  renderTable();
+}
+
+// ─── METRICS ─────────────────────────────────────────────────────────────────
+function renderMetrics() {
+  const t = filteredData.length;
+  const res = filteredData.filter(r => r.status.toLowerCase().includes('resolv')).length;
+  const pend = filteredData.filter(r => r.status.toLowerCase().includes('pendente')).length;
+  const and = filteredData.filter(r => r.status.toLowerCase().includes('andamento')).length;
+  const colabs = new Set(filteredData.map(r => r.colaboradora).filter(Boolean)).size;
+  const transp = new Set(filteredData.map(r => r.transportadora).filter(Boolean)).size;
+
+  const pct = v => t ? Math.round(v/t*100) : 0;
+
+  document.getElementById('metrics').innerHTML = `
+    ${metricCard('ti-clipboard-list', t, 'Total de atendimentos', '', '#6366f1', '#ede9fe')}
+    ${metricCard('ti-circle-check', res, 'Resolvidos', pct(res)+'% do total', 'var(--green)', 'var(--green-bg)')}
+    ${metricCard('ti-clock', and, 'Em andamento', pct(and)+'% do total', 'var(--blue)', 'var(--blue-bg)')}
+    ${metricCard('ti-alert-circle', pend, 'Pendentes', pct(pend)+'% do total', 'var(--amber)', 'var(--amber-bg)')}
+    ${metricCard('ti-users', colabs, 'Colaboradoras', 'ativas no período', '#8b5cf6', '#f3e8ff')}
+    ${metricCard('ti-truck', transp, 'Transportadoras', 'envolvidas', '#06b6d4', '#cffafe')}
+  `;
+}
+
+function metricCard(icon, value, label, sub, color, bg) {
+  return `<div class="metric-card" style="--mc-color:${color}; --mc-bg:${bg};">
+    <div class="metric-icon"><i class="ti ${icon}" aria-hidden="true"></i></div>
+    <div class="metric-value">${value}</div>
+    <div class="metric-label">${label}</div>
+    ${sub ? `<div class="metric-sub">${sub}</div>` : ''}
+  </div>`;
+}
+
+// ─── CHARTS ───────────────────────────────────────────────────────────────────
+function getComputedColor(varName) {
+  return getComputedStyle(document.documentElement).getPropertyValue(varName).trim() || '#888';
+}
+
+function chartDefaults() {
+  const textColor = getComputedColor('--text2');
+  const gridColor = getComputedColor('--border');
+  return { textColor, gridColor };
+}
+
+function countBy(data, key, top) {
+  const map = {};
+  data.forEach(r => { const v = r[key]||'N/A'; map[v] = (map[v]||0)+1; });
+  let sorted = Object.entries(map).sort((a,b)=>b[1]-a[1]);
+  if (top) sorted = sorted.slice(0, top);
+  return { labels: sorted.map(e=>e[0]), values: sorted.map(e=>e[1]) };
+}
+
+function makeLegend(id, labels, colors) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = labels.map((l,i) =>
+    `<div class="legend-item"><span class="legend-dot" style="background:${colors[i%colors.length]}"></span><span>${l}</span></div>`
+  ).join('');
+}
+
+function destroyChart(key) {
+  if (charts[key]) { try { charts[key].destroy(); } catch(e){} delete charts[key]; }
+}
+
+function renderCharts() {
+  const { textColor, gridColor } = chartDefaults();
+  const baseOpts = {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } }
+  };
+
+  // Colaboradora bar
+  destroyChart('colab');
+  const colabData = countBy(filteredData, 'colaboradora');
+  const colabColors = colabData.labels.map((_,i) => PALETTE[i%PALETTE.length]);
+  makeLegend('legend-colab', colabData.labels, colabColors);
+  charts.colab = new Chart(document.getElementById('chart-colab'), {
+    type: 'bar',
+    data: { labels: colabData.labels, datasets: [{ data: colabData.values, backgroundColor: colabColors, borderRadius: 6, borderSkipped: false }] },
+    options: { ...baseOpts, scales: {
+      y: { beginAtZero: true, ticks: { stepSize: 1, color: textColor }, grid: { color: gridColor } },
+      x: { ticks: { color: textColor }, grid: { display: false } }
+    }}
+  });
+
+  // Transportadora doughnut
+  destroyChart('transp');
+  const transpData = countBy(filteredData, 'transportadora');
+  const transpColors = transpData.labels.map((_,i) => PALETTE[(i+2)%PALETTE.length]);
+  makeLegend('legend-transp', transpData.labels, transpColors);
+  charts.transp = new Chart(document.getElementById('chart-transp'), {
+    type: 'doughnut',
+    data: { labels: transpData.labels, datasets: [{ data: transpData.values, backgroundColor: transpColors, borderWidth: 2, borderColor: 'transparent', hoverOffset: 6 }] },
+    options: { ...baseOpts, cutout: '65%' }
+  });
+
+  // Timeline line
+  destroyChart('timeline');
+  const byDate = {};
+  filteredData.forEach(r => { if (r.data) byDate[r.data] = (byDate[r.data]||0)+1; });
+  const dates = Object.keys(byDate).sort();
+  charts.timeline = new Chart(document.getElementById('chart-timeline'), {
+    type: 'line',
+    data: { labels: dates, datasets: [{
+      data: dates.map(d=>byDate[d]),
+      borderColor: '#6366f1', backgroundColor: 'rgba(99,102,241,0.08)',
+      tension: 0.4, fill: true, pointRadius: 3, pointBackgroundColor: '#6366f1',
+      pointBorderColor: 'transparent'
+    }]},
+    options: { ...baseOpts, scales: {
+      y: { beginAtZero: true, ticks: { stepSize: 1, color: textColor }, grid: { color: gridColor } },
+      x: { ticks: { maxTicksLimit: 14, color: textColor }, grid: { display: false } }
+    }}
+  });
+
+  // Ocorrência horizontal bar
+  destroyChart('ocorrencia');
+  const ocData = countBy(filteredData, 'ocorrencia', 6);
+  const ocColors = ocData.labels.map((_,i) => PALETTE[(i+4)%PALETTE.length]);
+  charts.ocorrencia = new Chart(document.getElementById('chart-ocorrencia'), {
+    type: 'bar',
+    data: { labels: ocData.labels, datasets: [{ data: ocData.values, backgroundColor: ocColors, borderRadius: 4 }] },
+    options: { ...baseOpts, indexAxis: 'y', scales: {
+      x: { beginAtZero: true, ticks: { stepSize: 1, color: textColor }, grid: { color: gridColor } },
+      y: { ticks: { color: textColor }, grid: { display: false } }
+    }}
+  });
+
+  // Canal polar area
+  destroyChart('canal');
+  const canalData = countBy(filteredData, 'canal');
+  const canalColors = canalData.labels.map((_,i) => PALETTE[(i+1)%PALETTE.length]);
+  makeLegend('legend-canal', canalData.labels, canalColors);
+  charts.canal = new Chart(document.getElementById('chart-canal'), {
+    type: 'polarArea',
+    data: { labels: canalData.labels, datasets: [{ data: canalData.values, backgroundColor: canalColors.map(c => c + 'cc') }] },
+    options: { ...baseOpts, scales: { r: { ticks: { color: textColor, backdropColor: 'transparent' }, grid: { color: gridColor } } } }
+  });
+}
+
+// ─── TABLE ────────────────────────────────────────────────────────────────────
+const AVATAR_MAP = {};
+function getAvatar(name) {
+  if (!name) return '#888';
+  if (!AVATAR_MAP[name]) {
+    const idx = Object.keys(AVATAR_MAP).length;
+    AVATAR_MAP[name] = AVATAR_COLORS[idx % AVATAR_COLORS.length];
+  }
+  return AVATAR_MAP[name];
+}
+
+function initials(name) {
+  if (!name) return '?';
+  const parts = name.trim().split(' ');
+  return (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+}
+
+function statusBadge(s) {
+  const sl = (s||'').toLowerCase();
+  if (sl.includes('resolv')) return `<span class="badge badge-green"><span class="status-dot dot-green"></span>${s}</span>`;
+  if (sl.includes('andamento')) return `<span class="badge badge-blue"><span class="status-dot dot-blue"></span>${s}</span>`;
+  if (sl.includes('pendente')) return `<span class="badge badge-amber"><span class="status-dot dot-amber"></span>${s}</span>`;
+  if (sl.includes('cancel') || sl.includes('encerr')) return `<span class="badge badge-red"><span class="status-dot dot-red"></span>${s}</span>`;
+  return `<span class="badge badge-gray">${s||'—'}</span>`;
+}
+
+function renderTable() {
+  const rows = filteredData.slice().sort((a,b) => b.data.localeCompare(a.data)).slice(0, 100);
+  document.getElementById('table-count').textContent = `${rows.length} de ${filteredData.length} registros`;
+  document.getElementById('table-body').innerHTML = rows.length === 0
+    ? `<tr><td colspan="12"><div class="empty"><i class="ti ti-search-off"></i><p>Nenhum registro encontrado</p></div></td></tr>`
+    : rows.map(r => {
+      const color = getAvatar(r.colaboradora);
+      return `<tr>
+        <td><div style="display:flex; align-items:center; gap:8px;">
+          <div class="avatar" style="background:${color}">${initials(r.colaboradora)}</div>
+          <span>${r.colaboradora||'—'}</span>
+        </div></td>
+        <td><span style="color:var(--text2)">${r.data||'—'}</span></td>
+        <td><span class="badge badge-accent">${r.canal||'—'}</span></td>
+        <td>${r.solicitante||'—'}</td>
+        <td><code style="font-size:12px; background:var(--surface2); padding:2px 6px; border-radius:4px;">${r.pedido||'—'}</code></td>
+        <td><code style="font-size:12px; background:var(--surface2); padding:2px 6px; border-radius:4px;">${r.idk||'—'}</code></td>
+        <td>${r.transportadora||'—'}</td>
+        <td>${r.ocorrencia||'—'}</td>
+        <td><span class="badge badge-gray">${r.filial||'—'}</span></td>
+        <td>${r.cd||'—'}</td>
+        <td>${r.resolucao||'—'}</td>
+        <td>${statusBadge(r.status)}</td>
+      </tr>`;
+    }).join('');
+}
+</script>
+</body>
+</html>
